@@ -65,5 +65,5 @@ The main Inception scenario looks like this:
 
  * Logging for good feedback
  * Statistical interaction with projections, maze complexity, subconscious training
- * Physics projection
+ * Physics bleedthrough
  * Visualization
