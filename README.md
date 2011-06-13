@@ -60,3 +60,10 @@ The main Inception scenario looks like this:
   //everyone in the citydream
   citygroup ! Kick
 ```
+
+**TODO**
+
+ * Logging for good feedback
+ * Statistical interaction with projections, maze complexity, subconscious training
+ * Physics projection
+ * Visualization
