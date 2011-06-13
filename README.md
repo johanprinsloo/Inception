@@ -1,7 +1,9 @@
-package org.dreamsim
+Simulation Environment for the Inception World
+----------------------------------------------
 
-class InceptionScenario {
+The main Inception scenario looks like this:
 
+'''
   val saito = Character("Saito", None ) //we don't know if Saito has a Totem
   val cobb = Character("Cobb", Some( new Totem("spinner")) )
   val arthur = Character("Arthur", Some( new Totem("dice")) )
@@ -57,4 +59,3 @@ class InceptionScenario {
 
   //everyone in the citydream
   citygroup ! Kick
-}
