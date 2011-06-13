@@ -3,7 +3,7 @@ Simulation Environment for the Inception World
 
 The main Inception scenario looks like this:
 
-'''
+``` scala
   val saito = Character("Saito", None ) //we don't know if Saito has a Totem
   val cobb = Character("Cobb", Some( new Totem("spinner")) )
   val arthur = Character("Arthur", Some( new Totem("dice")) )
@@ -59,3 +59,4 @@ The main Inception scenario looks like this:
 
   //everyone in the citydream
   citygroup ! Kick
+```
