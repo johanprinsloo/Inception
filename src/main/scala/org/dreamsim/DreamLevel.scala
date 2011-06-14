@@ -15,6 +15,7 @@ class DreamLevel(name: String,
   val projections : Set[Projection] = Set.empty
   var realizer: Character = Scenario.environment
   var previouslevel: DreamLevel = Scenario.reality
+  var nextlevel: DreamLevel = Scenario.reality
   var level = 0L
   var aggression: Double = 0.5  //projection aggression level
   var time = 0
@@ -41,6 +42,7 @@ class DreamLevel(name: String,
   def timeIncrement( timetick: TimeTick ) = {
      characters foreach  { ch => ch !! TimeTick }
      projections foreach  { ch => ch !! TimeTick }
+     nextlevel ! new TimeTick( timetick.increment * Scenario.levelTimeMultiplier )
   }
 
   def joinDream( character: Character ) {

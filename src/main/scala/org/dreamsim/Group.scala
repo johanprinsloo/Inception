@@ -16,7 +16,7 @@ class Group(name:  String ) extends Actor {
     case _ => { members foreach { member => member ! _ } }
   }
 
-  def ~>> ( newmember: Character) : Group = {
+  def <<~ ( newmember: Character) : Group = {
     members += newmember
     return this
   }
