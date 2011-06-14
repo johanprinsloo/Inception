@@ -2,7 +2,7 @@ package org.dreamsim
 
 import actors.Actor
 import actors.Actor._
-
+import scala.collection.mutable.Set
 /**
  * Implements Inception dreamlevel with these charateristics:
  *    time resolution is in seconds
@@ -34,12 +34,25 @@ class DreamLevel(name: String,
   }
 
   def act = eventloop {
-    case timeinc : TimeTick => timeincrement( timeinc )
+    case timeinc : TimeTick => timeIncrement( timeinc )
+    case character: Character => joinDream( character )
   }
 
-  def timeincrement( timetick: TimeTick ) = {
+  def timeIncrement( timetick: TimeTick ) = {
      characters foreach  { ch => ch !! TimeTick }
      projections foreach  { ch => ch !! TimeTick }
+  }
+
+  def joinDream( character: Character ) {
+    characters += character
+    if( character == realizer ) {
+      projections ++= character.getProjections( mazeComplexity )
+      aggression = character.trainingLevel
+    }
+  }
+
+  def removeFromDream( character: Character ) {
+    characters -= character
   }
 
  def increment : Long = {

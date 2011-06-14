@@ -2,8 +2,8 @@ package org.dreamsim
 
 import scala.actors._
 import Actor._
-import java.lang.Boolean
 import collection.immutable.Stack
+import scala.Double
 
 class Totem(name : String ) {
   var state = true
@@ -14,13 +14,13 @@ class Character( name: String, totem: Option[Totem] ) extends Actor {
   var sane = true
   var consciousness = Stack( Scenario.reality )
   var trainingLevel: Double = 0.5
-  var sedationlevel = 0.0
+  var sedationlevel: Double = 0.0
   var time = 0L
 
   def act = eventloop {
 
     case shot : Sedation => sedationlevel = shot.level
-    case Sleep => {}
+    case sleep: Sleep => sleeprules( sleep.dream )
     case Kick => kickrules
     case Kill => killrules
     case TimeTick => {}
@@ -28,9 +28,9 @@ class Character( name: String, totem: Option[Totem] ) extends Actor {
 
   def createDreamlevel( name: String , mazeComplexity: Double = 0.5): DreamLevel =
         new DreamLevel( name, this, mazeComplexity )
-  def realizeDreamlevel( dl : DreamLevel ): DreamLevel = {
-    dl.realize(this, consciousness.top, trainingLevel)
-  }
+
+  def realizeDreamlevel( dl : DreamLevel ): DreamLevel =
+        dl.realize(this, consciousness.top, trainingLevel)
 
   /**
    * the Totem will indicate reality
@@ -39,8 +39,20 @@ class Character( name: String, totem: Option[Totem] ) extends Actor {
     return !totem.isEmpty && ( consciousness.size == 1 ) && sane
   }
 
-  def killrules = {
+  def sleeprules( dream: DreamLevel ) = {
+    consciousness push dream
+    dream joinDream this
+  }
 
+  def killrules = {
+    sedationlevel match {
+      case d:Double if d >= Scenario.criticalSedationLevel => { // drop to limbo
+      }
+      case d:Double if d < Scenario.criticalSedationLevel => { // kick up a level
+        val dreamlevel = consciousness top
+      }
+    }
+    //(consciousness.top()).removeFromDream( this )
   }
 
   def kickrules = {
@@ -49,6 +61,11 @@ class Character( name: String, totem: Option[Totem] ) extends Actor {
 
   def ticktime = {
     time = time + 1
+  }
+
+
+  def getProjections( mazeComplexity: Double ) : Set[Projection] = {
+    Set.empty
   }
 
 }
