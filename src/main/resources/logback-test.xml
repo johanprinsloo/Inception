@@ -9,7 +9,7 @@
             <level>info</level>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>InceptionScenario.log.%i</fileNamePattern>
+            <fileNamePattern>InceptionScenario%i.log</fileNamePattern>
             <maxIndex>10</maxIndex>
         </rollingPolicy>
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">

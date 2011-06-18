@@ -4,15 +4,14 @@ import actors.Actor
 import actors.Actor._
 import scala.collection.mutable.Set
 import grizzled.slf4j._
-import javax.sound.sampled.Line.Info
 
 /**
  * Implements Inception dreamlevel with these charateristics:
  *    time resolution is in seconds
  */
-class DreamLevel(name: String,
-                 creator: Character,
-                 mazeComplexity: Double = 1.0) extends Actor with Logging {
+class DreamLevel(val name: String,
+                 val creator: Character,
+                 val mazeComplexity: Double = 1.0) extends Actor with Logging {
 
   val characters: Set[Character] = Set.empty
   val projections: Set[Projection] = Set.empty
@@ -21,8 +20,8 @@ class DreamLevel(name: String,
   var nextlevel: DreamLevel = Scenario.reality
   var level = 0L
   var aggression: Double = 0.5 //projection aggression level
-  var time = 0
-  info(name + " designed by " + creator)
+  var time = 0L
+  info( name + " designed by " + creator.name )
 
   /**
    * A specific character has to realize the dream level - this character's subconscious drives the
@@ -35,18 +34,26 @@ class DreamLevel(name: String,
     level = previousDL.increment
     previouslevel = previousDL
     aggression = trainingLevel
-    info(name + " dreamed by " + from)
+    previousDL.linkDownLevel( this )
+    info(name + " dreamed by " + from.name)
     return this
   }
 
+  def linkDownLevel( downlevel: DreamLevel ) = {
+    nextlevel = downlevel
+  }
+
   def act = eventloop {
-    case timeinc: TimeTick => timeIncrement(timeinc)
-    case character: Character => <--(character)
+    case timeinc: TimeTick => timeIncrement( timeinc )
+    case character: Character => this <-- character
   }
 
   def timeIncrement(timetick: TimeTick) = {
-    characters.par foreach {
-      ch => ch !! TimeTick
+
+    time = time + timetick.increment
+    info( name + " time incremented by " + timetick.increment + " to " + time )
+    characters foreach {
+      ch => if( ch.consciousness.top == this ) ch !! TimeTick
     }
     projections foreach {
       ch => ch !! TimeTick
@@ -56,18 +63,31 @@ class DreamLevel(name: String,
   }
 
   // join character to dream
-  def <--(character: Character): DreamLevel =  {
+  def introduceRealizer(character: Character) {
+    projections ++= character.getProjections(mazeComplexity)
+    aggression = character.trainingLevel
+  }
+
+  def introduceDreamer(character: Character) {
+    projections ++= character.getPsychoticProjections(mazeComplexity)
+  }
+
+  def <-- (character: Character): DreamLevel =  {
     characters += character
-    if (character == realizer) {
-      projections ++= character.getProjections(mazeComplexity)
-      aggression = character.trainingLevel
-    }
+
+    if( character == realizer ) introduceRealizer( character )
+    else introduceDreamer( character )
+
+//    character match {
+//      case `realizer` => introduceRealizer( character )
+//      case _ => introduceDreamer( character )
+//    }
     debug(character + " joined dream " + name)
     return this
   }
 
   // remove character from dream
-  def -->(character: Character): DreamLevel = {
+  def --> (character: Character): DreamLevel = {
     characters -= character
     return this
   }
@@ -75,6 +95,12 @@ class DreamLevel(name: String,
   def increment: Long = {
     level + 1
   }
+}
 
-  def dreamname : String = name
+object DreamLevel {
+  def apply ( name : String, creator: Character, mazeComplexity :  Double = 0.5 ) : DreamLevel = {
+    val dl = new DreamLevel( name, creator, mazeComplexity )
+    dl.start
+    return dl
+  }
 }

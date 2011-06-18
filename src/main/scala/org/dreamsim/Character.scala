@@ -2,18 +2,20 @@ package org.dreamsim
 
 import scala.actors._
 import Actor._
-import collection.immutable.Stack
-import scala.Double
+import collection.mutable.Stack
 import grizzled.slf4j._
 
 class Totem(name : String ) {
   var state = true
 }
 
-class Character( name: String, totem: Option[Totem] ) extends Actor with Logging {
+class Character( val name: String,
+                 val totem: Option[Totem] ) extends Actor with Logging {
 
+  Scenario.getSceneTime
   var sane = true
-  var consciousness = Stack( Scenario.reality )
+  var psychosis  = 0.0D
+  var consciousness = Stack.empty[DreamLevel]
   var trainingLevel: Double = 0.5
   var sedationlevel: Double = 0.0
   var time = 0L
@@ -24,14 +26,18 @@ class Character( name: String, totem: Option[Totem] ) extends Actor with Logging
     case sleep: Sleep => sleeprules( sleep.dream )
     case Kick => kickrules
     case Kill => killrules
-    case TimeTick => {}
+    case tt : TimeTick => timeIncrement( tt )
+    case "exit" => {info( name + " is done"); exit()}
+    case m => info( name + " gets unknown message " + m )
   }
 
-  def createDreamlevel( name: String , mazeComplexity: Double = 0.5): DreamLevel =
-        new DreamLevel( name, this, mazeComplexity )
+  def createDreamlevel( name: String , mazeComplexity: Double = 0.5): DreamLevel = {
+    DreamLevel( name, this, mazeComplexity )
+  }
 
-  def realizeDreamlevel( dl : DreamLevel ): DreamLevel =
-        dl.realize(this, consciousness.top, trainingLevel)
+  def realizeDreamlevel( dl : DreamLevel ): DreamLevel = {
+    dl.realize(this, consciousness.top, trainingLevel)
+  }
 
   /**
    * the Totem will indicate reality
@@ -56,25 +62,32 @@ class Character( name: String, totem: Option[Totem] ) extends Actor with Logging
   }
 
   def kickrules = {
-    (consciousness.pop2)._1 --> ( this )
-    info( name + " kicked up to " + (consciousness.top).dreamname )
+    (consciousness.pop) --> ( this )
+    info( name + " kicked up to " + (consciousness.top).name )
   }
 
-  def ticktime( tick: TimeTick ) = {
-    time = time + tick.increment
-    debug( name + " dream time advanced to " + time )
+  def timeIncrement(tick: TimeTick): Unit = {
+     time = time + tick.increment
+     info( name + " dream time advanced by " + tick.increment + " to " + time )
   }
-
 
   def getProjections( mazeComplexity: Double ) : Set[Projection] = {
     Set.empty
   }
 
+  def getPsychoticProjections( mazeComplexity: Double ) : Set[Projection] = {
+    psychosis match {
+      case ps:Double if ps > 0.0 => Set.empty
+      case _ => Set.empty
+    }
+    Set.empty
+  }
 
   //add charater to the dream
   def --> ( dream: DreamLevel ) : Character = {
     consciousness push dream
     dream <-- this
+    info( name + " added to " + dream.name + " during construction " + consciousness.size)
     return this
   }
 
@@ -89,18 +102,34 @@ class Character( name: String, totem: Option[Totem] ) extends Actor with Logging
 
 }
 
-object Character {
-  def apply ( name: String, totem: Option[Totem] ):  Character = new Character( name, totem )
-  def apply ( name: String ): Character =  new Character( name, None )
-  def apply ( ): Character = new Character("Jane", None)
+object Character extends Logging {
+
+  private def makeChar(ch: Character): Character = {
+    ch.start
+    ch --> Scenario.reality
+  }
+
+  def apply ( name: String, totem: Option[Totem] ):  Character = {
+    makeChar(new Character( name, totem ))
+  }
+
+  def apply ( name: String ): Character =  {
+    makeChar( new Character( name, None ) )
+  }
+
+  def apply ( ): Character = {
+    makeChar( new Character("Jane", None) )
+  }
 
   def totembyname( name: String, totemname: Option[String] ): Character = {
     val totem: Option[ Totem ] = totemname match {
       case None => None
       case Some(name) => Option( new Totem(name) )
     }
-    new Character(name, totem )
+    makeChar( new Character(name, totem ) )
   }
+
+  def scenetime : Long = Scenario getSceneTime
 }
 
 class Projection( name : String ) extends Actor {
