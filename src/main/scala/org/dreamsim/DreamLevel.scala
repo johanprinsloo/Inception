@@ -4,6 +4,7 @@ import actors.Actor
 import actors.Actor._
 import scala.collection.mutable.Set
 import grizzled.slf4j._
+import scala.None
 
 /**
  * Implements Inception dreamlevel with these charateristics:
@@ -16,8 +17,8 @@ class DreamLevel(val name: String,
   val characters: Set[Character] = Set.empty
   val projections: Set[Projection] = Set.empty
   var realizer: Character = Scenario.environment
-  var previouslevel: DreamLevel = Scenario.reality
-  var nextlevel: DreamLevel = Scenario.reality
+  var previouslevel: Option[DreamLevel] = None //(Scenario.reality)
+  var nextlevel: Option[DreamLevel] = None //Some(Scenario.reality)
   var level = 0L
   var aggression: Double = 0.5 //projection aggression level
   var time = 0L
@@ -32,7 +33,7 @@ class DreamLevel(val name: String,
               trainingLevel: Double = 0.5): DreamLevel = {
     realizer = from
     level = previousDL.increment
-    previouslevel = previousDL
+    previouslevel = Some(previousDL)
     aggression = trainingLevel
     previousDL.linkDownLevel( this )
     info(name + " dreamed by " + from.name)
@@ -40,7 +41,7 @@ class DreamLevel(val name: String,
   }
 
   def linkDownLevel( downlevel: DreamLevel ) = {
-    nextlevel = downlevel
+    nextlevel = Some(downlevel)
   }
 
   def act = eventloop {
@@ -53,12 +54,20 @@ class DreamLevel(val name: String,
     time = time + timetick.increment
     info( name + " time incremented by " + timetick.increment + " to " + time )
     characters foreach {
-      ch => if( ch.consciousness.top == this ) ch !! TimeTick
+      ch => if( ch.consciousness.top == this ) ch !! TimeTick( timetick.increment )
     }
     projections foreach {
       ch => ch !! TimeTick
     }
-    nextlevel ! new TimeTick(timetick.increment * Scenario.levelTimeMultiplier)
+
+    nextlevel match {
+      case Some(x) => { x ! new TimeTick( timetick.increment * Scenario.levelTimeMultiplier ) }
+      case None => debug("no nextlevel defined in " + name)
+    }
+
+
+
+
     info(name + " time advanced by " + timetick.increment)
   }
 

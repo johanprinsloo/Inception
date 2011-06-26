@@ -49,6 +49,10 @@ class CharacterTest extends FunSuite with Logging {
     assert( jamie.time === 100 )
     assert( adam.time === 100 )
 
+    adam !! TimeTick( 1000 )
+    Thread.sleep(500)
+    assert( adam.time === 1100 )
+
     info( "Actor state 3 " + buster.getState )
     assert( buster.getState == Actor.State.Suspended | buster.getState == Actor.State.Runnable )
 

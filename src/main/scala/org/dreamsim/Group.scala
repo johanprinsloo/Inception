@@ -13,7 +13,7 @@ class Group( val name: String ) extends Actor with Logging {
 
   def act = eventloop {
     case "disband" => { members.empty; exit() }
-    case "exit" => { members foreach { member => member ! "exit" } }
+    case "exit" => { members foreach { member => member ! "exit" }; exit() }
     case m => { members foreach { member => member ! m } }
   }
 

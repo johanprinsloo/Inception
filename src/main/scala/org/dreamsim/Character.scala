@@ -54,9 +54,13 @@ class Character( val name: String,
   def killrules = {
     sedationlevel match {
       case d:Double if d >= Scenario.criticalSedationLevel => { // drop to limbo
+        Scenario.limbo <-- this
+        consciousness push Scenario.limbo
+        info( name + " killed and dropped to limbo")
       }
       case d:Double if d < Scenario.criticalSedationLevel => { // kick up a level
-        val dreamlevel = consciousness top
+        (consciousness.pop) --> ( this )
+        info( name + " killed up to " + (consciousness.top).name )
       }
     }
   }
