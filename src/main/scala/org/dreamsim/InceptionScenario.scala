@@ -1,6 +1,5 @@
 package org.dreamsim
 
-import org.dreamsim.Character
 
 class InceptionScenario extends App {
 

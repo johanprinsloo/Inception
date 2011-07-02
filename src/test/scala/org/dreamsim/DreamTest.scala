@@ -29,9 +29,10 @@ class DreamTest extends FunSuite with Logging{
     assert( Scenario.reality.characters.contains(adam), " characters contained in reality" )
     assert( Scenario.reality.characters.contains(jamie), " characters contained in reality" )
 
-    Scenario.reality !! TimeTick( 10 )
-    Thread.sleep(100)
-    assert( Scenario.reality.time == 10 , "reality time inc")
+    val rtime1 = Scenario.reality.time
+    Scenario.reality !? TimeTick( 10 )
+
+    assert( Scenario.reality.time === (rtime1 + 10) , "reality time inc")
 
     assert( buster.time === Scenario.reality.time,
       " character time multiplier: \t charater time: " + buster.time +
@@ -42,51 +43,50 @@ class DreamTest extends FunSuite with Logging{
     assert( Scenario.reality.nextlevel.get == dream1 , "next level linked correctly ")
     assert( dream1.previouslevel.get == Scenario.reality , "previous level linked correctly ")
 
-    dreamgroup1 !! Sleep ( dream1 )
-    Thread.sleep(100)
+    dreamgroup1 !? Sleep ( dream1 )
+
     assert( dream1.characters.contains(buster), "dream1 contains buster" )
     assert(dream1.characters.contains(jamie))
     assert(dream1.characters.contains(adam))
 
-    Scenario.reality !! TimeTick( 59 )
-    Thread.sleep(100)
+    Scenario.reality !? TimeTick( 59 )
 
     assert( buster.time === 10 + 59 * Scenario.levelTimeMultiplier, "character time multiplier" )
 
     val dreamgroup2 = Group("dreamgroup2") <<~ adam <<~ jamie
     val dream2 = adam realizeDreamlevel dreamlevel2
-    assert(dream1.nextlevel.get == dream2, "dream 1 uplinked")
-    assert(dream2.previouslevel.get == dream1, "dream 2 back linked")
-    dreamgroup2 !! Sleep( dream2 )
-    Thread.sleep(100)
-    assert(dream2.characters.contains(jamie))
-    assert(dream2.characters.contains(adam))
-    assert(jamie.consciousness.top === dream2)
+    assert( dream1.nextlevel.get == dream2, "dream 1 uplinked" )
+    assert( dream2.previouslevel.get == dream1, "dream 2 back linked" )
+    dreamgroup2 !? Sleep( dream2 )
 
-    Scenario.reality !! TimeTick( 10 )
-    Thread.sleep(100)
-    assert(adam.time === 10 + (59 * Scenario.levelTimeMultiplier) +
+    assert( dream2.characters.contains(jamie) )
+    assert( dream2.characters.contains(adam) )
+    assert( jamie.consciousness.top === dream2 )
+
+    Scenario.reality !? TimeTick( 10 )
+
+    assert( adam.time === 10 + (59 * Scenario.levelTimeMultiplier) +
       (10 * Scenario.levelTimeMultiplier * Scenario.levelTimeMultiplier) , " second level character time multiplier")
 
-    jamie !! Kick
-    Thread.sleep(100)
-    assert(jamie.consciousness.top === dream1)
-    assert(!dream2.characters.contains(jamie))
+    jamie !? Kick
 
-    adam !! Kill
-    Thread.sleep(100)
-    assert(adam.consciousness.top === dream1)
-    assert(!dream2.characters.contains(adam))
+    assert( jamie.consciousness.top === dream1 )
+    assert( !dream2.characters.contains(jamie) )
 
-    adam !! Sedation(0.8)
-    Thread.sleep(100)
-    adam !! Kill
-    Thread.sleep(100)
+    adam !? Kill
+
+    assert( adam.consciousness.top === dream1 )
+    assert( !dream2.characters.contains(adam) )
+
+    adam !? Sedation(0.8)
+
+    adam !? Kill
+
     assert(adam.consciousness.top === Scenario.limbo)
 
-    dreamgroup1 !! "exit"
-    dream1 !! "exit"
-    dream2 !! "exit"
+    dreamgroup1 ! "exit"
+    dream1 ! "exit"
+    dream2 ! "exit"
 
   }
 }

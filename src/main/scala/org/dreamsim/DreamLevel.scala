@@ -45,8 +45,8 @@ class DreamLevel(val name: String,
   }
 
   def act = eventloop {
-    case timeinc: TimeTick => timeIncrement( timeinc )
-    case character: Character => this <-- character
+    case timeinc: TimeTick => { timeIncrement( timeinc ); reply() }
+    case character: Character => {this <-- character; reply() }
   }
 
   def timeIncrement(timetick: TimeTick) = {
@@ -54,21 +54,18 @@ class DreamLevel(val name: String,
     time = time + timetick.increment
     info( name + " time incremented by " + timetick.increment + " to " + time )
     characters foreach {
-      ch => if( ch.consciousness.top == this ) ch !! TimeTick( timetick.increment )
+      ch => if( ch.consciousness.top == this ) ch !? TimeTick( timetick.increment )
     }
     projections foreach {
-      ch => ch !! TimeTick
+      ch => ch !? TimeTick
     }
 
     nextlevel match {
-      case Some(x) => { x ! new TimeTick( timetick.increment * Scenario.levelTimeMultiplier ) }
+      case Some(x) => { x !? new TimeTick( timetick.increment * Scenario.levelTimeMultiplier ) }
       case None => debug("no nextlevel defined in " + name)
     }
 
-
-
-
-    info(name + " time advanced by " + timetick.increment)
+    debug(name + " time advanced by " + timetick.increment)
   }
 
   // join character to dream

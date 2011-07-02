@@ -14,7 +14,7 @@ class Group( val name: String ) extends Actor with Logging {
   def act = eventloop {
     case "disband" => { members.empty; exit() }
     case "exit" => { members foreach { member => member ! "exit" }; exit() }
-    case m => { members foreach { member => member ! m } }
+    case m => { members foreach { member => member !? m }; reply() }
   }
 
   def <<~ ( newmember: Character) : Group = {
@@ -22,6 +22,13 @@ class Group( val name: String ) extends Actor with Logging {
     members += newmember
     return this
   }
+
+  def ~>> ( kickmember: Character) : Group = {
+    info("Kicking  " + kickmember.name + " from " + name + " group")
+    members -= kickmember
+    return this
+  }
+  
 }
 
 object Group {

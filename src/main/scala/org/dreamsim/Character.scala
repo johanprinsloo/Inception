@@ -22,13 +22,13 @@ class Character( val name: String,
   info( name + " created ")
 
   def act = eventloop {
-    case shot : Sedation => sedationlevel = shot.level
-    case sleep: Sleep => sleeprules( sleep.dream )
-    case Kick => kickrules
-    case Kill => killrules
-    case tt : TimeTick => timeIncrement( tt )
-    case "exit" => {info( name + " is done"); exit()}
-    case m => info( name + " gets unknown message " + m )
+    case shot : Sedation => { sedationlevel = shot.level; reply() }
+    case sleep: Sleep => { sleeprules( sleep.dream ); reply() }
+    case Kick => { kickrules; reply() }
+    case Kill => { killrules; reply() }
+    case tt : TimeTick => { timeIncrement( tt ) ; reply() }
+    case "exit" => { info( name + " is done"); exit() }
+    case m => { info( name + " gets unknown message " + m ); reply() }
   }
 
   def createDreamlevel( name: String , mazeComplexity: Double = 0.5): DreamLevel = {
@@ -91,7 +91,7 @@ class Character( val name: String,
   def --> ( dream: DreamLevel ) : Character = {
     consciousness push dream
     dream <-- this
-    info( name + " added to " + dream.name + " during construction " + consciousness.size)
+    debug( name + " added to " + dream.name + " during construction " + consciousness.size)
     return this
   }
 

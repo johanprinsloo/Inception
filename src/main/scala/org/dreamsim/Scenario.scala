@@ -12,4 +12,6 @@ object Scenario {
 
 
   def getSceneTime :  Long = scenetime
+  def Reality : DreamLevel = reality
 }
+
